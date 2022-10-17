@@ -2,7 +2,7 @@
 set -e
 
 usage(){
-	echo "$0 [-d|-r] [-v] [-l logfilename] totalrequests concurrentrequests url"
+	echo "$0 [-d|-r] [-v] [-l logfilename] totalrequests concurrentrequests1 concurrent2 concurrent3 url"
 	echo "-d		Graph Y axis as duration"
 	echo "-r		Graph Y axis as requests per second"
 	echo "-v		debug."
@@ -19,7 +19,7 @@ LOGFILE=""
 URLFILE=""
 
 # set list of ordered params, in order
-declare -a LISTOFPARAMS=("TOTALREQUESTS" "CONCURRENTREQUESTS" "URL")
+declare -a LISTOFPARAMS=("TOTALREQUESTS" "CONCURRENTREQUESTS1" "CONCURRENTREQUESTS2" "CONCURRENTREQUESTS3" "URL")
 
 # TODO: handle long opt
 while (( $# )); do
@@ -32,7 +32,7 @@ while (( $# )); do
 		:) echo "Option -$OPTARG requires an argument." >&2; exit 1;;
 		v|verbose) echo "verbose set"; set -x;;
 		h|help) usage; exit 0;;
-		d|r) MODE="${OPTARG}";;
+		d|r) MODE="${OPTARG}"; echo "not implemented. showing both always";;
 		l|logfile) LOGFILE="${OPTARG}";;
 		f|urlFILE) URLFILE="${OPTARG}";;
 	esac
@@ -58,10 +58,56 @@ if [ ${#LISTOFPARAMS[@]} -gt 0 ]; then
 	exit 1
 fi
 
-ab -k -n ${TOTALREQUESTS} -c ${CONCURRENTREQUESTS} -g ${LOGFILE}.tsv "${URL}"
+ab -k -n ${TOTALREQUESTS} -c ${CONCURRENTREQUESTS1} -g ${LOGFILE}-${CONCURRENTREQUESTS1}.tsv "${URL}"
+sleep 1
+ab -k -n ${TOTALREQUESTS} -c ${CONCURRENTREQUESTS2} -g ${LOGFILE}-${CONCURRENTREQUESTS2}.tsv "${URL}"
+sleep 1
+ab -k -n ${TOTALREQUESTS} -c ${CONCURRENTREQUESTS3} -g ${LOGFILE}-${CONCURRENTREQUESTS3}.tsv "${URL}"
 
 cat << ENDPLOT > ${LOGFILE}.plot
-set terminal png size 600 set output "${LOGFILE}.png"set title"${TOTALREQUESTS} requests, ${CONCURRENTREQUESTS} concurrent requests "set size ratio 0.6 set grid and set xlabel"requests" set ylabel"response time (ms)" plot"${LOGFILE}.tsv"using 9 smooth sbezier with lines title"TESTING 123"
+set datafile separator "\\t"
+set terminal png font "ubuntu mono, 11" size 800
+set output "${LOGFILE}.png"
+
+set multiplot layout 2, 1 title "Load test\n ${URL}"
+
+set title "histogram ${TOTALREQUESTS} requests"
+# the data is already sorted by duration, so just plot as is for histogram
+set grid
+set key below
+#set xdata time
+set timefmt "%a %b %d %H:%M:%S %Y"
+set xlabel "bucket"
+set ylabel "response time (ms)"
+plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 5 smooth sbezier with lines lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 5 smooth sbezier with lines lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 5 smooth sbezier with lines lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
+
+
+set title "${TOTALREQUESTS} requests"
+set grid
+set key below
+set xdata time
+set timefmt "%a %b %d %H:%M:%S %Y"
+set xlabel "start time"
+set ylabel "response time (ms)"
+plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 1:5 smooth sbezier with lines lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 1:5 smooth sbezier with lines lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 1:5 smooth sbezier with lines lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
+
+
+#set title "by time"
+#set key below
+## to get by time, use seconds(2) or date(1) as X
+#set timefmt "%s"
+#set xdata time
+##set xrange [ * : * ] noreverse nowriteback
+#set timefmt "%a %b %d %H:%M:%S %Y"
+#plot "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 1:(\$5-\$3)                 with filledcurve title "ttime" lc "#000000"
+##    "${LOGFILE}-s-${CONCURRENTREQUESTS2}.tsv" using 2:(\$3+\$4)         with filledcurve title "dtime" lc "#00ff00"
+##    "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 2:(3+4+5)     with filledcurve title "ttime" lc "#00ffff", \\
+##    "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 2:(3+4+5+6) with filledcurve title "wait"  lc "#ff0000"
+unset multiplot
 ENDPLOT
 
 command gnuplot ${LOGFILE}.plot
