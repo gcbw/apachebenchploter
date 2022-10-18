@@ -91,9 +91,9 @@ set xdata time
 set timefmt "%a %b %d %H:%M:%S %Y"
 set xlabel "start time"
 set ylabel "response time (ms)"
-plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 1:5 smooth sbezier with lines lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
-     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 1:5 smooth sbezier with lines lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
-     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 1:5 smooth sbezier with lines lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
+plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 1:5  lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 1:5  lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 1:5  lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
 
 
 #set title "by time"
