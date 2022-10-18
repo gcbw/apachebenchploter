@@ -76,7 +76,6 @@ set title "histogram ${TOTALREQUESTS} requests"
 set grid
 set key below
 #set xdata time
-set timefmt "%a %b %d %H:%M:%S %Y"
 set xlabel "bucket"
 set ylabel "response time (ms)"
 plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 5 smooth sbezier with lines lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
@@ -88,12 +87,13 @@ set title "${TOTALREQUESTS} requests"
 set grid
 set key below
 set xdata time
-set timefmt "%a %b %d %H:%M:%S %Y"
+#set timefmt "%a %b %d %H:%M:%S %Y"
+set timefmt "%s"
 set xlabel "start time"
 set ylabel "response time (ms)"
-plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 1:5  lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
-     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 1:5  lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
-     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 1:5  lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
+plot "${LOGFILE}-${CONCURRENTREQUESTS1}.tsv" using 2:5  lc "#00ff00" title "${CONCURRENTREQUESTS1} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS2}.tsv" using 2:5  lc "#0066ff" title "${CONCURRENTREQUESTS2} concurrent requests", \\
+     "${LOGFILE}-${CONCURRENTREQUESTS3}.tsv" using 2:5  lc "#ffaa00" title "${CONCURRENTREQUESTS3} concurrent requests", \\
 
 
 #set title "by time"
